@@ -217,7 +217,7 @@ namespace WindowsFormsApp7
             }
             if (legallyID >= 0 && clientNameID >= 0 && employeeNameID >= 0)
             {
-                string queryStringDogovorADD = "INSERT INTO Договоры2 (Название_договора, Номер_договора, Дата_подписания, Срок_действия, Сумма_договора, Статус) VALUES (@Name, @Number, @SignDate, @EndDate, @Amount, @Status)";
+                string queryStringDogovorADD = "INSERT INTO Договоры (Название_договора, Номер_договора, Дата_подписания, Срок_действия, Статус) VALUES (@Name, @Number, @SignDate, @EndDate,  @Status)";
                 try
                 {
                     
@@ -230,7 +230,6 @@ namespace WindowsFormsApp7
                         command.Parameters.AddWithValue("@Number", contractNumber);
                         command.Parameters.AddWithValue("@SignDate", signDate);
                         command.Parameters.AddWithValue("@EndDate", endDate);
-                        command.Parameters.AddWithValue("@Amount", amount);
                         command.Parameters.AddWithValue("@Status", status);
                         command.ExecuteNonQuery();
                         MessageBox.Show("Договор успешно добавлен!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -246,7 +245,7 @@ namespace WindowsFormsApp7
                     dataBase.closeConection();
                 }
 
-                string queryStringDogovor = "SELECT ID_договора FROM Договоры2 WHERE Название_договора = @Name";
+                string queryStringDogovor = "SELECT ID_договора FROM Договоры WHERE Название_договора = @Name";
                 try
                 {
                     using (SqlCommand command = new SqlCommand(queryStringDogovor, dataBase.getConnect()))
@@ -259,7 +258,6 @@ namespace WindowsFormsApp7
                         if (result != null)
                         {
                             
-                            
                             idDogovor = Convert.ToInt32(result);
                             string queryStringPartic = "INSERT INTO Участники_договора (ID_договора, ID_клиента, ID_сотрудника, ID_отдела) VALUES (@ContractId, @ClientId, @EmployeeId, @DepartmentId)";
 
@@ -268,12 +266,12 @@ namespace WindowsFormsApp7
                                 using (SqlCommand commandPartic = new SqlCommand(queryStringPartic, dataBase.getConnect()))
                                 {
                                     dataBase.openConection();
-                                    command.Parameters.AddWithValue("@ContractId", idDogovor);
-                                    command.Parameters.AddWithValue("@ClientId", clientNameID);
-                                    command.Parameters.AddWithValue("@EmployeeId", employeeNameID);
-                                    command.Parameters.AddWithValue("@DepartmentId", legallyID);
+                                    commandPartic.Parameters.AddWithValue("@ContractId", idDogovor);
+                                    commandPartic.Parameters.AddWithValue("@ClientId", clientNameID);
+                                    commandPartic.Parameters.AddWithValue("@EmployeeId", employeeNameID);
+                                    commandPartic.Parameters.AddWithValue("@DepartmentId", legallyID);
 
-                                    command.ExecuteNonQuery();
+                                    commandPartic.ExecuteNonQuery();
                                     MessageBox.Show("Участник договора успешно добавлен!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 }
                             }
@@ -306,6 +304,72 @@ namespace WindowsFormsApp7
         }
 
         private void textBox5_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            string newStatus = textBox2.Text;
+            string contractNumber = textBox1.Text;
+            SqlDataAdapter adapter = new SqlDataAdapter();
+            DataTable table = new DataTable();
+
+            int contractId = -1; // Значение по умолчанию, если договор не найден
+            string status = "";  // Значение по умолчанию для статуса
+
+
+            string query = "SELECT ID_договора, Статус FROM Договоры WHERE Номер_договора = @ContractNumber";
+            using (SqlConnection connection = dataBase.getConnect())
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@ContractNumber", contractNumber);
+                    adapter.SelectCommand = command;
+                    adapter.Fill(table); // Заполняем DataTable данными
+                }
+                connection.Close();
+            }
+
+            // Если данные найдены, берем первый результат
+            if (table.Rows.Count > 0)
+            {
+                contractId = Convert.ToInt32(table.Rows[0]["ID_договора"]);
+                status = table.Rows[0]["Статус"].ToString();
+            }
+
+            // Обновляем статус договора
+            string updateContractQuery = "UPDATE Договоры SET Статус = @NewStatus WHERE ID_договора = @ContractId";
+            using (SqlCommand updateCommand = new SqlCommand(updateContractQuery, dataBase.getConnect()))
+            {
+                dataBase.openConection();
+                updateCommand.Parameters.AddWithValue("@NewStatus", newStatus);
+                updateCommand.Parameters.AddWithValue("@ContractId", contractId);
+                updateCommand.ExecuteNonQuery();
+            }
+
+            // Добавляем запись в историю изменений
+            string insertHistoryQuery = "INSERT INTO История_изменений (ID_договора, Дата_изменения, Старое_значение, Новое_значение) VALUES (@ContractId, @ChangeDate, @OldValue, @NewValue)";
+            using (SqlCommand insertCommand = new SqlCommand(insertHistoryQuery, dataBase.getConnect()))
+            {
+                insertCommand.Parameters.AddWithValue("@ContractId", contractId);
+                insertCommand.Parameters.AddWithValue("@ChangeDate", DateTime.Now);
+                insertCommand.Parameters.AddWithValue("@OldValue", status);
+                insertCommand.Parameters.AddWithValue("@NewValue", newStatus);
+                insertCommand.ExecuteNonQuery();
+            }
+
+            dataBase.closeConection();
+            MessageBox.Show("Статус обновлен, и запись добавлена в историю изменений.");
+        }
+
+        private void textBox1_TextChanged_1(object sender, EventArgs e)
         {
 
         }

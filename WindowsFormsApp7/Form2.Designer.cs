@@ -78,6 +78,7 @@ namespace WindowsFormsApp7
             this.button2.TabIndex = 1;
             this.button2.Text = "Редактировать договор";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // button3
             // 
@@ -114,6 +115,7 @@ namespace WindowsFormsApp7
             this.button6.TabIndex = 5;
             this.button6.Text = "Сформировать печатную форму";
             this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // button7
             // 
@@ -232,6 +234,7 @@ namespace WindowsFormsApp7
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(200, 20);
             this.textBox1.TabIndex = 19;
+            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged_1);
             // 
             // textBox3
             // 
